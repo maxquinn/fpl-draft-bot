@@ -264,7 +264,7 @@ func init() {
 }
 
 func colloquialTime(t time.Time) string {
-	h := t.Hour()
+	h := t.Local().Hour()
 	switch {
 	case h >= 22 && h <= 3:
 		return "late tonight"
