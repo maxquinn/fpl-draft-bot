@@ -3,7 +3,6 @@ package draftbot
 import (
 	"encoding/json"
 	"fmt"
-	"math/rand"
 	"net/http"
 	"os"
 	"strconv"
@@ -13,75 +12,76 @@ import (
 	"github.com/GoogleCloudPlatform/functions-framework-go/functions"
 	"github.com/bwmarrin/discordgo"
 	"github.com/joho/godotenv"
+	"github.com/maxquinn/draftbot/completions"
 	"golang.org/x/exp/slices"
 )
 
 type Element struct {
-	ID                               int       `json:"id"`
-	Assists                          int       `json:"assists"`
-	Bonus                            int       `json:"bonus"`
-	Bps                              int       `json:"bps"`
-	CleanSheets                      int       `json:"clean_sheets"`
-	Creativity                       string    `json:"creativity"`
-	GoalsConceded                    int       `json:"goals_conceded"`
-	GoalsScored                      int       `json:"goals_scored"`
-	IctIndex                         string    `json:"ict_index"`
-	Influence                        string    `json:"influence"`
-	Minutes                          int       `json:"minutes"`
-	OwnGoals                         int       `json:"own_goals"`
-	PenaltiesMissed                  int       `json:"penalties_missed"`
-	PenaltiesSaved                   int       `json:"penalties_saved"`
-	RedCards                         int       `json:"red_cards"`
-	Saves                            int       `json:"saves"`
+	NewsAdded                        time.Time `json:"news_added"`
+	Added                            time.Time `json:"added"`
+	NewsReturn                       any       `json:"news_return"`
+	EpNext                           any       `json:"ep_next"`
+	DirectFreekicksOrder             any       `json:"direct_freekicks_order"`
+	PenaltiesOrder                   any       `json:"penalties_order"`
+	SquadNumber                      any       `json:"squad_number"`
+	CornersAndIndirectFreekicksOrder any       `json:"corners_and_indirect_freekicks_order"`
+	NewsUpdated                      any       `json:"news_updated"`
+	ChanceOfPlayingThisRound         any       `json:"chance_of_playing_this_round"`
+	PointsPerGameRankType            any       `json:"points_per_game_rank_type"`
+	PointsPerGameRank                any       `json:"points_per_game_rank"`
+	FormRankType                     any       `json:"form_rank_type"`
+	FormRank                         any       `json:"form_rank"`
+	EpThis                           any       `json:"ep_this"`
 	Threat                           string    `json:"threat"`
-	YellowCards                      int       `json:"yellow_cards"`
-	Starts                           int       `json:"starts"`
+	PointsPerGame                    string    `json:"points_per_game"`
+	Status                           string    `json:"status"`
+	SecondName                       string    `json:"second_name"`
 	ExpectedGoals                    string    `json:"expected_goals"`
 	ExpectedAssists                  string    `json:"expected_assists"`
 	ExpectedGoalInvolvements         string    `json:"expected_goal_involvements"`
 	ExpectedGoalsConceded            string    `json:"expected_goals_conceded"`
-	Added                            time.Time `json:"added"`
-	ChanceOfPlayingNextRound         int       `json:"chance_of_playing_next_round"`
-	ChanceOfPlayingThisRound         any       `json:"chance_of_playing_this_round"`
-	Code                             int       `json:"code"`
-	DraftRank                        int       `json:"draft_rank"`
-	DreamteamCount                   int       `json:"dreamteam_count"`
-	EpNext                           any       `json:"ep_next"`
-	EpThis                           any       `json:"ep_this"`
-	EventPoints                      int       `json:"event_points"`
-	FirstName                        string    `json:"first_name"`
-	Form                             string    `json:"form"`
-	InDreamteam                      bool      `json:"in_dreamteam"`
-	News                             string    `json:"news"`
-	NewsAdded                        time.Time `json:"news_added"`
-	NewsReturn                       any       `json:"news_return"`
-	NewsUpdated                      any       `json:"news_updated"`
-	PointsPerGame                    string    `json:"points_per_game"`
-	SecondName                       string    `json:"second_name"`
-	SquadNumber                      any       `json:"squad_number"`
-	Status                           string    `json:"status"`
-	TotalPoints                      int       `json:"total_points"`
 	WebName                          string    `json:"web_name"`
+	Form                             string    `json:"form"`
+	Influence                        string    `json:"influence"`
+	IctIndex                         string    `json:"ict_index"`
+	CornersAndIndirectFreekicksText  string    `json:"corners_and_indirect_freekicks_text"`
+	Creativity                       string    `json:"creativity"`
+	DirectFreekicksText              string    `json:"direct_freekicks_text"`
+	PenaltiesText                    string    `json:"penalties_text"`
+	News                             string    `json:"news"`
+	FirstName                        string    `json:"first_name"`
+	Saves                            int       `json:"saves"`
+	CreativityRankType               int       `json:"creativity_rank_type"`
+	EventPoints                      int       `json:"event_points"`
+	DreamteamCount                   int       `json:"dreamteam_count"`
+	DraftRank                        int       `json:"draft_rank"`
+	Code                             int       `json:"code"`
+	ChanceOfPlayingNextRound         int       `json:"chance_of_playing_next_round"`
+	Starts                           int       `json:"starts"`
+	YellowCards                      int       `json:"yellow_cards"`
+	ID                               int       `json:"id"`
+	TotalPoints                      int       `json:"total_points"`
+	RedCards                         int       `json:"red_cards"`
 	InfluenceRank                    int       `json:"influence_rank"`
 	InfluenceRankType                int       `json:"influence_rank_type"`
 	CreativityRank                   int       `json:"creativity_rank"`
-	CreativityRankType               int       `json:"creativity_rank_type"`
+	Team                             int       `json:"team"`
 	ThreatRank                       int       `json:"threat_rank"`
 	ThreatRankType                   int       `json:"threat_rank_type"`
 	IctIndexRank                     int       `json:"ict_index_rank"`
 	IctIndexRankType                 int       `json:"ict_index_rank_type"`
-	FormRank                         any       `json:"form_rank"`
-	FormRankType                     any       `json:"form_rank_type"`
-	PointsPerGameRank                any       `json:"points_per_game_rank"`
-	PointsPerGameRankType            any       `json:"points_per_game_rank_type"`
-	CornersAndIndirectFreekicksOrder any       `json:"corners_and_indirect_freekicks_order"`
-	CornersAndIndirectFreekicksText  string    `json:"corners_and_indirect_freekicks_text"`
-	DirectFreekicksOrder             any       `json:"direct_freekicks_order"`
-	DirectFreekicksText              string    `json:"direct_freekicks_text"`
-	PenaltiesOrder                   any       `json:"penalties_order"`
-	PenaltiesText                    string    `json:"penalties_text"`
+	PenaltiesSaved                   int       `json:"penalties_saved"`
+	PenaltiesMissed                  int       `json:"penalties_missed"`
+	OwnGoals                         int       `json:"own_goals"`
+	Minutes                          int       `json:"minutes"`
+	GoalsScored                      int       `json:"goals_scored"`
+	GoalsConceded                    int       `json:"goals_conceded"`
+	CleanSheets                      int       `json:"clean_sheets"`
+	Bps                              int       `json:"bps"`
+	Bonus                            int       `json:"bonus"`
+	Assists                          int       `json:"assists"`
 	ElementType                      int       `json:"element_type"`
-	Team                             int       `json:"team"`
+	InDreamteam                      bool      `json:"in_dreamteam"`
 }
 
 type BootstrapData struct {
@@ -89,13 +89,13 @@ type BootstrapData struct {
 }
 
 type LeagueEntry struct {
-	EntryID         int       `json:"entry_id"`
-	EntryName       string    `json:"entry_name"`
-	ID              int       `json:"id"`
 	JoinedTime      time.Time `json:"joined_time"`
+	EntryName       string    `json:"entry_name"`
 	PlayerFirstName string    `json:"player_first_name"`
 	PlayerLastName  string    `json:"player_last_name"`
 	ShortName       string    `json:"short_name"`
+	EntryID         int       `json:"entry_id"`
+	ID              int       `json:"id"`
 	WaiverPick      int       `json:"waiver_pick"`
 }
 
@@ -108,16 +108,16 @@ type PublicTrades struct {
 }
 
 type Trade struct {
-	ID            int       `json:"id"`
-	OfferedEntry  int       `json:"offered_entry"`
-	OfferTime     time.Time `json:"offer_time"`
-	ReceivedEntry int       `json:"received_entry"`
-	ResponseTime  time.Time `json:"response_time"`
-	State         string    `json:"state"`
-	TradeitemSet  []struct {
+	OfferTime    time.Time `json:"offer_time"`
+	ResponseTime time.Time `json:"response_time"`
+	State        string    `json:"state"`
+	TradeitemSet []struct {
 		ElementIn  int `json:"element_in"`
 		ElementOut int `json:"element_out"`
 	} `json:"tradeitem_set"`
+	ID            int `json:"id"`
+	OfferedEntry  int `json:"offered_entry"`
+	ReceivedEntry int `json:"received_entry"`
 }
 
 type PlayerSwap struct {
@@ -126,12 +126,12 @@ type PlayerSwap struct {
 }
 
 type Annoucement struct {
+	Time     time.Time
 	ID       string
 	TeamFrom string
 	TeamTo   string
-	Players  []PlayerSwap
-	Time     time.Time
 	Status   string
+	Players  []PlayerSwap
 }
 
 var tradeStatuses = map[string]string{
@@ -143,119 +143,6 @@ var tradeStatuses = map[string]string{
 	"v": "Vetoed",    // Vetoed - The trade was accepted but has been vetoed by the league administrator or managers.
 	"e": "Expired",   // Expired - The proposed trade wasn't accepted by the trade deadline.
 	"p": "Processed", // Processed - The trade has been made.
-}
-
-/*
-*
-
-	%[1]s - time
-	%[2]s - team A
-	%[3]s - team B
-	%[4]s - players joining A
-	%[5]s - players joining B
-*/
-var messageTemplates = map[string][]string{
-	"Processed": {
-		`
-@everyone
-🚨 Trade Alert 🚨
-
-Deal agreed %[1]s between %[2]s and %[3]s.
-
-We understand it's a swap deal, %[4]s for %[5]s.
-
-Here we go! ✨
----
-`,
-		`
-@everyone
-It looks like a done deal! ✅
-
-%[5]s will join %[3]s %[1]s, while %[2]s will welcome %[4]s.
-
-Here we go! ✨
----
-`,
-		`
-@everyone
-🚨 BREAKING: %[2]s and %[3]s have officially agreed a deal %[1]s.
-
-%[4]s will be flying to the %[2]s grounds to meet with the owners.
-
-%[5]s will be heading to %[3]s to complete medical evaluation.
----
-`,
-	},
-	"Accepted": {
-		`
-@everyone
-Understood that %[2]s and %[3]s are close to completing a swap deal.
-
-%[4]s for %[5]s. The players have approved the transfer.
-
-It's now up to the league whether or not the deal goes through.
-
-%[2]s and %[3]s hope to get the deal over the line before this week's deadline.
-
-More to come...
----
-`,
-		`
-@everyone
-%[3]s have given the green light 🚨🟢
-
-%[5]s will be joining %[3]s %[1]s unless there's a veto from the league.
-
-Understood to be a swap deal. Both parties happy.
-
-%[4]s will fly to %[2]s to complete the deal.
----
-`,
-		`
-@everyone
-BREAKING: Deal thought to be nearly done between %[2]s and %[3]s 📈
-
-Only the league has the power to stop this one happening.
-
-%[5]s will be joining %[3]s while %[4]s are going the other way.
-
-%[2]s have already booked medical tests.
----
-`,
-	},
-	"Vetoed": {
-		`
-@everyone
-🛑 Dramatic last minute veto! 🛑
-
-The managers have decided to block the %[4]s for %[5]s swap deal.
-
-It was thought to be a done deal %[1]s between %[2]s and %[3]s.
-
-Both parties are understandably unhappy.
----
-`,
-		`
-@everyone
-BREAKING: We thought the saga was over between %[2]s and %[3]s.
-
-The league has put a halt to the swap deal - %[4]s for %[5]s
-
-The %[3]s camp is fuming. %[2]s had done a lot to try and get this one over the line.
-
-It's not to be 📉
----
-`,
-		`
-@everyone
-BREAKING %[1]s 🔴 - The %[4]s x %[5]s swap has been vetoed!
-
-The %[2]s agents flew to the %[3]s camp yesterday to try and get the deal over the line.
-
-Understood that the league weren't happy with the deal and have halted it.
----
-`,
-	},
 }
 
 func init() {
@@ -333,8 +220,19 @@ func postTradeAnnouncements(d *discordgo.Session, a Annoucement) {
 	}
 	tradeTime := colloquialTime(a.Time)
 	if a.Status == "Processed" || a.Status == "Accepted" || a.Status == "Vetoed" {
-		randIdx := rand.Intn(len(messageTemplates[a.Status]))
-		m := fmt.Sprintf(messageTemplates[a.Status][randIdx], tradeTime, a.TeamFrom, a.TeamTo, displayIn, displayOut)
+		tradeDeal := completions.TradeDeal{
+			Time:             tradeTime,
+			Status:           a.Status,
+			TeamOffering:     a.TeamFrom,
+			TeamReceiving:    a.TeamTo,
+			PlayersOffered:   displayIn,
+			PlayersRequested: displayOut,
+		}
+		m, err := completions.CreateCompletion(tradeDeal)
+		if err != nil {
+			return
+		}
+
 		d.ChannelMessageSend(os.Getenv("ANNOUNCEMENT_CHANNEL_ID"), m)
 		d.ChannelMessageSend(os.Getenv("META_CHANNEL_ID"), a.ID+"-"+a.Status)
 	}

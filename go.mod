@@ -1,6 +1,6 @@
 module github.com/maxquinn/draftbot
 
-go 1.20
+go 1.22
 
 require (
 	github.com/GoogleCloudPlatform/functions-framework-go v1.7.4
